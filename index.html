@@ -379,6 +379,12 @@ tbody tr:last-child { border-bottom:none; }
 <div class="tab-panel" id="tab-rekap">
   <div class="absen-card">
     <h2>📊 Rekap Absensi</h2>
+    <div style="margin-bottom:16px;">
+      <button onclick="syncFromSheets()" style="padding:10px 20px;border-radius:50px;background:linear-gradient(135deg,#1565C0,#42A5F5);color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:0.88rem;display:inline-flex;align-items:center;gap:8px;">
+        🔄 Sync Data dari Google Sheets
+      </button>
+      <span style="font-size:0.78rem;color:#90A4AE;margin-left:12px;">Klik untuk ambil data terbaru</span>
+    </div>
     <div class="filter-row">
       <select id="filterBulan">
         <option value="0">Januari</option><option value="1">Februari</option>
@@ -1322,6 +1328,43 @@ function kirimKeSheets(data){
     console.log('Data terkirim ke Google Sheets');
   }).catch(err=>{
     console.log('Gagal kirim ke Sheets:', err);
+  });
+}
+
+
+// ── SYNC DATA DARI GOOGLE SHEETS ──
+function syncFromSheets(){
+  showAlert('Mengambil data dari Google Sheets...', 'success');
+  fetch(SHEETS_URL + '?action=getAbsen')
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success || !res.data || res.data.length < 2) {
+      showAlert('Tidak ada data di Google Sheets!', 'error');
+      return;
+    }
+    // Skip baris header (index 0)
+    const rows = res.data.slice(1);
+    // Convert ke format DB.absen
+    const newAbsen = rows.map((row, i) => ({
+      id: i + 1,
+      tanggal: row[0] || '',
+      namaGuru: row[1] || '',
+      nip: row[2] || '-',
+      jamMasuk: row[3] || '-',
+      jamPulang: row[4] || '-',
+      status: row[5] === 'pulang' ? 'hadir' : (row[5] || 'hadir'),
+      keterangan: row[6] || '',
+      guruId: (DB.guru.find(g=>g.nama===row[1])||{id:0}).id
+    })).filter(a=>a.tanggal);
+    
+    DB.absen = newAbsen;
+    saveDB();
+    renderStats();
+    renderAbsenTable();
+    showAlert(`✅ Berhasil sync ${newAbsen.length} data absen dari Google Sheets!`, 'success');
+  })
+  .catch(err=>{
+    showAlert('Gagal ambil data dari Sheets: ' + err.message, 'error');
   });
 }
 
