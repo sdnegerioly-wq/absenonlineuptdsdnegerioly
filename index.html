@@ -671,7 +671,17 @@ let DB = {
 let currentUser = null;
 
 // Load from localStorage
-function loadDB(){ const d=localStorage.getItem('sdnoly_absen'); if(d) DB=JSON.parse(d); }
+function loadDB(){
+  const d=localStorage.getItem('sdnoly_absen');
+  if(d) DB=JSON.parse(d);
+  // Paksa radius minimal 200 meter agar GPS tidak terlalu ketat
+  if(!DB.schoolRadius || parseInt(DB.schoolRadius) < 200){
+    DB.schoolRadius = '200';
+  }
+  if(!DB.schoolLat) DB.schoolLat = '-10.8168556';
+  if(!DB.schoolLng) DB.schoolLng = '122.6671975';
+  saveDB();
+}
 function saveDB(){ localStorage.setItem('sdnoly_absen',JSON.stringify(DB)); }
 
 // Init default guru
