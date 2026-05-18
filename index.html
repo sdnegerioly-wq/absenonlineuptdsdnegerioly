@@ -546,7 +546,7 @@ tbody tr:last-child { border-bottom:none; }
         </div>
         <div class="form-group">
           <label>Radius Absen (meter)</label>
-          <input type="number" id="schoolRadius" placeholder="100" value="100">
+          <input type="number" id="schoolRadius" placeholder="200" value="200">
         </div>
         <div class="form-group" style="align-self:flex-end;">
           <button class="btn-add" onclick="getMyLocation()" style="width:100%;justify-content:center;">📍 Pakai Lokasi Saya</button>
@@ -1500,7 +1500,7 @@ function verifyLocationAndAbsen(){
     const lng=pos.coords.longitude;
     const schoolLat=parseFloat(DB.schoolLat||-10.8168556);
     const schoolLng=parseFloat(DB.schoolLng||122.6671975);
-    const radius=parseInt(DB.schoolRadius||100);
+    const radius=parseInt(DB.schoolRadius||200);
     const dist=getDistance(lat,lng,schoolLat,schoolLng);
     userLocation={lat,lng,dist,valid:dist<=radius};
     if(userLocation.valid){
@@ -1522,7 +1522,7 @@ function submitAbsenQR(type){
   if(!guruId){ showAlert('Pilih nama Anda terlebih dahulu!','error'); return; }
   if(!userLocation){ showAlert('Verifikasi lokasi GPS gagal!','error'); return; }
   if(!userLocation.valid){
-    showAlert(`❌ Absen ditolak! Anda berada ${Math.round(userLocation.dist)}m dari sekolah. Harus di dalam ${DB.schoolRadius||100}m!`,'error');
+    showAlert(`❌ Absen ditolak! Anda berada ${Math.round(userLocation.dist)}m dari sekolah. Harus di dalam ${DB.schoolRadius||200}m!`,'error');
     return;
   }
   const guru=DB.guru.find(g=>g.id===guruId);
