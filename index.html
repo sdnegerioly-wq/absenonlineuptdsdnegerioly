@@ -1310,9 +1310,25 @@ function gantiPassword(role){
   }
 }
 
+
+// ── KIRIM DATA KE GOOGLE SHEETS ──
+function kirimKeSheets(data){
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  }).then(()=>{
+    console.log('Data terkirim ke Google Sheets');
+  }).catch(err=>{
+    console.log('Gagal kirim ke Sheets:', err);
+  });
+}
+
 // ── QR CODE & GPS SYSTEM ──
 // Token STATIS permanen - sama di semua perangkat
 const QR_STATIC_TOKEN = 'SDNOLY-ABSEN-UPTDSDNEGERIOLY-2026';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwNiC9GzqhBC-6vPo6516L30foIPRcK0lD7bJVYI2isQd78cDfcXSYLHNOwG-I92cE_/exec';
 let qrStream = null;
 let userLocation = null;
 
@@ -1541,13 +1557,16 @@ function submitAbsenQR(type){
   let existing=DB.absen.find(a=>a.guruId===guruId&&a.tanggal===tgl);
   if(type==='masuk'){
     if(existing){ showAlert(`${guru.nama} sudah absen masuk hari ini!`,'error'); return; }
-    DB.absen.push({id:Date.now(),guruId,namaGuru:guru.nama,tanggal:tgl,status:'hadir',jamMasuk:now,jamPulang:'-',keterangan:`GPS: ${Math.round(userLocation.dist)}m dari sekolah`});
+    const absenData = {id:Date.now(),guruId,namaGuru:guru.nama,tanggal:tgl,status:'hadir',jamMasuk:now,jamPulang:'-',keterangan:`GPS: ${Math.round(userLocation.dist)}m dari sekolah`};
+    DB.absen.push(absenData);
+    kirimKeSheets({action:'absen', namaGuru:guru.nama, nip:guru.nip||'-', tanggal:tgl, jamMasuk:now, jamPulang:'-', status:'hadir', keterangan:`GPS: ${Math.round(userLocation.dist)}m`});
     closeModal('modalAbsenQR');
     showAlert(`✅ Absen masuk ${guru.nama} berhasil! Jarak: ${Math.round(userLocation.dist)}m`,'success');
   } else {
     if(!existing){ showAlert(`${guru.nama} belum absen masuk!`,'error'); return; }
     if(existing.jamPulang!=='-'){ showAlert(`${guru.nama} sudah absen pulang!`,'error'); return; }
     existing.jamPulang=now;
+    kirimKeSheets({action:'absen', namaGuru:guru.nama, nip:guru.nip||'-', tanggal:tgl, jamMasuk:existing.jamMasuk, jamPulang:now, status:'pulang', keterangan:`GPS: ${Math.round(userLocation.dist)}m`});
     closeModal('modalAbsenQR');
     showAlert(`🏠 Absen pulang ${guru.nama} berhasil!`,'success');
   }
