@@ -792,8 +792,6 @@ function updateClock(){
   document.getElementById('headerTime').textContent=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 setInterval(updateClock,1000); updateClock();
-// Auto login jika ada saved credential
-window.addEventListener('load', cekSavedLogin);
 
 // ── INIT ──
 function initPage(){
@@ -1781,6 +1779,7 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 // ── START ──
 loadDB();
 initDefaultGuru();
+cekSavedLogin();
 </script>
 </body>
 </html>
