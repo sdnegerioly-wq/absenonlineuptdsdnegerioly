@@ -1707,8 +1707,8 @@ function submitAbsenQR(type){
         showAlert(`🏠 Absen pulang ${guru.nama} berhasil!`,'success');
     }
     saveDB(); renderStats(); renderAbsenTable();
+    userLocation=null;
   });
-  userLocation=null;
 }
 
 function getDistance(lat1,lon1,lat2,lon2){
