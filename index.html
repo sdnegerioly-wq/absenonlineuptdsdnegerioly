@@ -881,17 +881,18 @@ function renderAbsenTable(){
   const today=new Date().toISOString().split('T')[0];
   syncHarian(()=>{
     const data=DB.absen.filter(a=>a.tanggal===today);
-  const tb=document.getElementById('absenTable');
-  if(!data.length){ tb.innerHTML=`<tr><td colspan="6" class="no-data"><div class="icon">📋</div><p>Belum ada absensi hari ini</p></td></tr>`; return; }
-  tb.innerHTML=data.map((a,i)=>`
-    <tr>
-      <td>${i+1}</td>
-      <td><strong>${a.namaGuru}</strong></td>
-      <td>${badgeHTML(a.status)}</td>
-      <td>${a.jamMasuk||'-'}</td>
-      <td>${a.jamPulang||'-'}</td>
-      <td>${a.keterangan||'-'}</td>
-    </tr>`).join('');
+    const tb=document.getElementById('absenTable');
+    if(!data.length){ tb.innerHTML=`<tr><td colspan="6" class="no-data"><div class="icon">📋</div><p>Belum ada absensi hari ini</p></td></tr>`; return; }
+    tb.innerHTML=data.map((a,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td><strong>${a.namaGuru}</strong></td>
+        <td>${badgeHTML(a.status)}</td>
+        <td>${a.jamMasuk||'-'}</td>
+        <td>${a.jamPulang||'-'}</td>
+        <td>${a.keterangan||'-'}</td>
+      </tr>`).join('');
+  });
 }
 
 function badgeHTML(status){
