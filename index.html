@@ -1180,14 +1180,13 @@ function exportExcel(){
   });
   
   // Buat CSV dengan format Excel
-  const csv = rows.map(r=>r.map(c=>'"'+String(c)+'"').join(',')).join('
-');
+  const csv = rows.map(r=>r.map(c=>'"'+String(c)+'"').join(',')).join('\n');
+
   const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'Rekap_Absensi_'+namaBulan[bulan]+'_'+tahun+'.csv';
   a.click();
-  
 }
 function cetakRekap(){
   const printContent = document.getElementById('rekapPrintArea').innerHTML;
@@ -1203,8 +1202,8 @@ function cetakRekap(){
   </style></head><body>${printContent}</body></html>`);
   win.document.close();
   win.print();
-  
 }
+// ── GANTI PASSWORD ──
 function gantiPassword(role){
   if(role==='admin'){
     const oldPass=document.getElementById('adminOldPass').value;
