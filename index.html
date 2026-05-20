@@ -393,7 +393,7 @@ tbody tr:last-child { border-bottom:none; }
       <select id="filterBulan">
         <option value="0">Januari</option><option value="1">Februari</option>
         <option value="2">Maret</option><option value="3">April</option>
-        <option value="4">Mei</option><option value="5" selected>Juni</option>
+        <option value="4" selected>Mei</option><option value="5">Juni</option>
         <option value="6">Juli</option><option value="7">Agustus</option>
         <option value="8">September</option><option value="9">Oktober</option>
         <option value="10">November</option><option value="11">Desember</option>
@@ -409,22 +409,55 @@ tbody tr:last-child { border-bottom:none; }
       <button class="btn-export" style="background:var(--blue);margin-left:4px;" onclick="exportExcel()">📊 Unduh Excel</button>
       <button class="btn-export" style="background:var(--orange);margin-left:4px;" onclick="cetakRekap()">🖨️ Cetak / PDF</button>
     </div>
+    <div id="rekapPrintArea">
+    <div style="text-align:center;font-weight:bold;font-size:1rem;margin-bottom:4px;">REKAPITULASI DAFTAR HADIR ASN</div>
+    <div style="margin-bottom:2px;font-size:0.9rem;">UPTD : SD NEGERI OLY</div>
+    <div style="margin-bottom:12px;font-size:0.9rem;">BULAN : <span id="labelBulanRekap"></span></div>
     <div class="table-wrap">
-      <table>
+      <table id="tabelRekap">
         <thead>
           <tr>
-            <th>No</th>
-            <th>Nama Guru</th>
-            <th>Hadir</th>
-            <th>Izin</th>
-            <th>Sakit</th>
-            <th>Alpha</th>
-            <th>Total Hari</th>
-            <th>% Hadir</th>
+            <th rowspan="3">NO</th>
+            <th rowspan="3">NAMA/NIP</th>
+            <th rowspan="3">GOL/<br>RUANG</th>
+            <th rowspan="3">JUMLAH<br>HARI<br>KERJA</th>
+            <th rowspan="3">JUMLAH<br>KEHADIRAN</th>
+            <th colspan="4">ABSEN</th>
+            <th rowspan="3">AKUMULASI<br>KETERLAMBATAN<br>MASUK KERJA<br>DAN PULANG<br>MENDAHULUI</th>
+            <th rowspan="3">KET.</th>
+          </tr>
+          <tr>
+            <th>SAKIT</th>
+            <th>IZIN</th>
+            <th>CUTI</th>
+            <th>TANPA<br>BERITA</th>
+          </tr>
+          <tr>
+            <th>6</th><th>7</th><th>8</th><th>9</th>
+          </tr>
+          <tr style="background:#ddd;font-style:italic;">
+            <td style="text-align:center;">1</td>
+            <td style="text-align:center;">2</td>
+            <td style="text-align:center;">3</td>
+            <td style="text-align:center;">4</td>
+            <td style="text-align:center;">5</td>
+            <td style="text-align:center;">6</td>
+            <td style="text-align:center;">7</td>
+            <td style="text-align:center;">8</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">10</td>
+            <td style="text-align:center;">11</td>
           </tr>
         </thead>
         <tbody id="rekapTable"></tbody>
       </table>
+    </div>
+    <div style="margin-top:24px;text-align:right;font-size:0.9rem;" id="ttdArea">
+      <div>Oly, <span id="labelTglTTD"></span></div>
+      <div style="margin-top:4px;">Kepala Sekolah,</div>
+      <div style="margin-top:60px;font-weight:bold;">BERNARD FEOH, S.Pd.SD</div>
+      <div>NIP. 197903112014061004</div>
+    </div>
     </div>
   </div>
 
@@ -716,16 +749,16 @@ function saveDB(){ localStorage.setItem('sdnoly_absen',JSON.stringify(DB)); }
 function initDefaultGuru(){
   // Selalu update data guru dengan gelar terbaru
   const defaultGuru = [
-    {id:1, nama:'Bernard Feoh, S.Pd.SD', nip:'197903112014061004', jabatan:'Kepala Sekolah', hp:'082259060677', status:'PNS'},
-    {id:2, nama:'Frans Bela, S.Pd', nip:'197103202006041016', jabatan:'Guru Kelas', hp:'', status:'PNS'},
-    {id:3, nama:'Herlin Fatuli, S.Pd.Gr', nip:'198109072009042003', jabatan:'Guru Agama Kristen', hp:'', status:'PNS'},
-    {id:4, nama:'Mathelda Penu, S.Pd', nip:'196605142005012007', jabatan:'Guru Kelas', hp:'', status:'PNS'},
-    {id:5, nama:'Muharam Bey, S.Pd', nip:'197004091996061001', jabatan:'Guru Kelas', hp:'', status:'PNS'},
-    {id:6, nama:'Orjen Mesak Ndun, S.Pd.Gr', nip:'198710202023211015', jabatan:'Guru Penjasorkes', hp:'', status:'PPPK'},
-    {id:7, nama:'Wansil Eduard Eba, S.Pd.Gr', nip:'-', jabatan:'Guru Bahasa Inggris', hp:'', status:'Honor'},
-    {id:8, nama:'Yanri Yuminto Fiah, S.Pd.Gr', nip:'199301232024211005', jabatan:'Guru Penjasorkes', hp:'', status:'PPPK'},
-    {id:9, nama:'Yermia Yolla, S.Pd.Gr', nip:'199308232025212041', jabatan:'Guru Kelas', hp:'', status:'PPPK'},
-    {id:10, nama:'Yermias Bella, S.Pd', nip:'198409292014061002', jabatan:'Guru Kelas', hp:'', status:'PNS'},
+    {id:1,  nama:'Bernard Feoh, S.Pd.SD',      nip:'197903112014061004', jabatan:'Kepala Sekolah',      golongan:'III/C', hp:'082259060677', status:'PNS'},
+    {id:2,  nama:'Frans Bela, S.Pd',            nip:'197103202006041016', jabatan:'Guru Kelas',          golongan:'III/B', hp:'', status:'PNS'},
+    {id:3,  nama:'Herlin Fatuli, S.Pd.Gr',      nip:'198109072009042003', jabatan:'Guru Agama Kristen',  golongan:'IV/A',  hp:'', status:'PNS'},
+    {id:4,  nama:'Mathelda Penu, S.Pd',         nip:'196605142005012007', jabatan:'Guru Kelas',          golongan:'III/D', hp:'', status:'PNS'},
+    {id:5,  nama:'Muharam Bey, S.Pd',           nip:'197004091996061001', jabatan:'Guru Kelas',          golongan:'IV/B',  hp:'', status:'PNS'},
+    {id:6,  nama:'Orjen Mesak Ndun, S.Pd.Gr',   nip:'198710202023211015', jabatan:'Guru Penjasorkes',    golongan:'IX',    hp:'', status:'PPPK'},
+    {id:7,  nama:'Wansil Eduard Eba, S.Pd.Gr',  nip:'-',                  jabatan:'Guru Bahasa Inggris', golongan:'-',     hp:'', status:'Honor'},
+    {id:8,  nama:'Yanri Yuminto Fiah, S.Pd.Gr', nip:'199301232024211005', jabatan:'Guru Penjasorkes',    golongan:'IX',    hp:'', status:'PPPK'},
+    {id:9,  nama:'Yermia Yolla, S.Pd.Gr',       nip:'199308232025212041', jabatan:'Guru Kelas',          golongan:'IX',    hp:'', status:'PPPK'},
+    {id:10, nama:'Yermias Bella, S.Pd',         nip:'198409292014061002', jabatan:'Guru Kelas',          golongan:'III/C', hp:'', status:'PNS'},
   ];
   // Update nama guru yang sudah ada agar gelar ikut terupdate
   defaultGuru.forEach(dg=>{
@@ -735,6 +768,7 @@ function initDefaultGuru(){
       existing.jabatan = dg.jabatan;
       existing.status = dg.status;
       existing.nip = dg.nip;
+      existing.golongan = dg.golongan;
     } else {
       DB.guru.push(dg);
     }
@@ -968,30 +1002,52 @@ function renderRekapTable(){
   const bulan=parseInt(document.getElementById('filterBulan').value);
   const tahun=parseInt(document.getElementById('filterTahun').value);
   const guruFilter=document.getElementById('filterGuruRekap').value;
+  
+  // Update label bulan
+  const namaBulan=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  document.getElementById('labelBulanRekap').textContent = namaBulan[bulan] + ' ' + tahun;
+  
+  // Hitung hari kerja bulan ini (Senin-Jumat)
+  let hariKerja = 0;
+  const tgl = new Date(tahun, bulan, 1);
+  while(tgl.getMonth() === bulan){
+    const h = tgl.getDay();
+    if(h !== 0 && h !== 6) hariKerja++;
+    tgl.setDate(tgl.getDate()+1);
+  }
+  
+  // Tanggal TTD (hari terakhir bulan)
+  const lastDay = new Date(tahun, bulan+1, 0);
+  document.getElementById('labelTglTTD').textContent = lastDay.getDate() + ' ' + namaBulan[bulan] + ' ' + tahun;
+  
   const data=DB.absen.filter(a=>{
     const d=new Date(a.tanggal);
     return d.getMonth()===bulan && d.getFullYear()===tahun && (guruFilter===''||a.guruId==guruFilter);
   });
   const guruList=guruFilter?DB.guru.filter(g=>g.id==guruFilter):DB.guru;
   const tb=document.getElementById('rekapTable');
-  if(!guruList.length){ tb.innerHTML=`<tr><td colspan="8" class="no-data"><p>Tidak ada data</p></td></tr>`; return; }
+  if(!guruList.length){ tb.innerHTML=`<tr><td colspan="11" class="no-data"><p>Tidak ada data</p></td></tr>`; return; }
   tb.innerHTML=guruList.map((g,i)=>{
-    const gAbsen=data.filter(a=>a.guruId===g.id);
-    const hadir=gAbsen.filter(a=>a.status==='hadir').length;
+    const gAbsen=data.filter(a=>a.guruId===g.id||a.namaGuru===g.nama);
+    const hadir=gAbsen.filter(a=>a.status==='hadir'||a.status==='pulang').length;
     const izin=gAbsen.filter(a=>a.status==='izin').length;
     const sakit=gAbsen.filter(a=>a.status==='sakit').length;
     const alpha=gAbsen.filter(a=>a.status==='alpha').length;
-    const total=hadir+izin+sakit+alpha;
-    const pct=total>0?Math.round((hadir/total)*100):0;
+    const cuti=gAbsen.filter(a=>a.status==='cuti').length;
+    const nipGuru = g.nip||'-';
+    const golGuru = g.golongan||'-';
     return `<tr>
-      <td>${i+1}</td>
-      <td><strong>${g.nama}</strong></td>
-      <td style="color:var(--green);font-weight:700;">${hadir}</td>
-      <td style="color:var(--blue);font-weight:700;">${izin}</td>
-      <td style="color:var(--orange);font-weight:700;">${sakit}</td>
-      <td style="color:var(--red);font-weight:700;">${alpha}</td>
-      <td>${total}</td>
-      <td><strong style="color:${pct>=80?'var(--green)':pct>=60?'var(--orange)':'var(--red)'};">${pct}%</strong></td>
+      <td style="text-align:center;">${i+1}</td>
+      <td>${g.nama}<br><small style="color:#666;">${nipGuru}</small></td>
+      <td style="text-align:center;">${golGuru}</td>
+      <td style="text-align:center;">${hariKerja}</td>
+      <td style="text-align:center;">${hadir}</td>
+      <td style="text-align:center;">${sakit||'-'}</td>
+      <td style="text-align:center;">${izin||'-'}</td>
+      <td style="text-align:center;">${cuti||'-'}</td>
+      <td style="text-align:center;">${alpha||'-'}</td>
+      <td style="text-align:center;">-</td>
+      <td style="text-align:center;">-</td>
     </tr>`;
   }).join('');
 }
@@ -1094,6 +1150,44 @@ function exportCSV(){
 }
 
 function exportExcel(){
+  const bulan=parseInt(document.getElementById('filterBulan').value);
+  const tahun=parseInt(document.getElementById('filterTahun').value);
+  const namaBulan=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  
+  // Hitung hari kerja
+  let hariKerja=0;
+  const tgl=new Date(tahun,bulan,1);
+  while(tgl.getMonth()===bulan){const h=tgl.getDay();if(h!==0&&h!==6)hariKerja++;tgl.setDate(tgl.getDate()+1);}
+  
+  const data=DB.absen.filter(a=>{const d=new Date(a.tanggal);return d.getMonth()===bulan&&d.getFullYear()===tahun;});
+  
+  let rows = [
+    ['REKAPITULASI DAFTAR HADIR ASN'],
+    ['UPTD : SD NEGERI OLY'],
+    ['BULAN : ' + namaBulan[bulan] + ' ' + tahun],
+    [],
+    ['NO','NAMA/NIP','GOL/RUANG','JUMLAH HARI KERJA','JUMLAH KEHADIRAN','SAKIT','IZIN','CUTI','TANPA BERITA','AKUMULASI KETERLAMBATAN','KET']
+  ];
+  
+  DB.guru.forEach((g,i)=>{
+    const gAbsen=data.filter(a=>a.namaGuru===g.nama||a.guruId===g.id);
+    const hadir=gAbsen.filter(a=>a.status==='hadir'||a.status==='pulang').length;
+    const izin=gAbsen.filter(a=>a.status==='izin').length;
+    const sakit=gAbsen.filter(a=>a.status==='sakit').length;
+    const alpha=gAbsen.filter(a=>a.status==='alpha').length;
+    const cuti=gAbsen.filter(a=>a.status==='cuti').length;
+    rows.push([i+1, g.nama+'/'+(g.nip||'-'), g.golongan||'-', hariKerja, hadir, sakit||'-', izin||'-', cuti||'-', alpha||'-', '-', '-']);
+  });
+  
+  // Buat CSV dengan format Excel
+  const csv = rows.map(r=>r.map(c=>'"'+String(c)+'"').join(',')).join('
+');
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Rekap_Absensi_'+namaBulan[bulan]+'_'+tahun+'.csv';
+  a.click();
+  return; //
   const bulan=parseInt(document.getElementById('filterBulan').value);
   const tahun=parseInt(document.getElementById('filterTahun').value);
   const namaBulan=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1220,6 +1314,21 @@ function exportExcel(){
 }
 
 function cetakRekap(){
+  const printContent = document.getElementById('rekapPrintArea').innerHTML;
+  const win = window.open('','_blank');
+  if(!win){ showAlert('Izinkan popup untuk mencetak!','error'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap Absensi SDN Oly</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;margin:20px;}
+    table{border-collapse:collapse;width:100%;}
+    th,td{border:1px solid #000;padding:4px 6px;font-size:10px;}
+    th{background:#f0f0f0;text-align:center;}
+    @media print{body{margin:10px;}}
+  </style></head><body>${printContent}</body></html>`);
+  win.document.close();
+  win.print();
+  return; // skip old code
+  //
   const bulan=parseInt(document.getElementById('filterBulan').value);
   const tahun=parseInt(document.getElementById('filterTahun').value);
   const namaBulan=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
