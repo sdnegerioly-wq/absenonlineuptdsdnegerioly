@@ -412,7 +412,14 @@ tbody tr:last-child { border-bottom:none; }
     <div id="rekapPrintArea">
     <div style="text-align:center;font-weight:bold;font-size:1rem;margin-bottom:4px;">REKAPITULASI DAFTAR HADIR ASN</div>
     <div style="margin-bottom:2px;font-size:0.9rem;">UPTD : SD NEGERI OLY</div>
-    <div style="margin-bottom:12px;font-size:0.9rem;">BULAN : <span id="labelBulanRekap"></span></div>
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-size:0.9rem;">BULAN : <span id="labelBulanRekap"></span></span>
+      <span style="font-size:0.9rem;display:flex;align-items:center;gap:6px;">
+        HARI KERJA: 
+        <input type="number" id="inputHariKerja" min="1" max="31" style="width:60px;padding:4px 8px;border:1px solid #1565C0;border-radius:6px;font-size:0.9rem;font-weight:bold;color:#1565C0;" onchange="renderRekapTable()">
+        <span style="font-size:0.78rem;color:#90A4AE;">(edit jika perlu)</span>
+      </span>
+    </div>
     <div class="table-wrap">
       <table id="tabelRekap">
         <thead>
@@ -455,7 +462,7 @@ tbody tr:last-child { border-bottom:none; }
     <div style="margin-top:24px;text-align:right;font-size:0.9rem;" id="ttdArea">
       <div>Oly, <span id="labelTglTTD"></span></div>
       <div style="margin-top:4px;">Kepala Sekolah,</div>
-      <div style="margin-top:60px;font-weight:bold;">BERNARD FEOH, S.Pd.SD</div>
+      <div style="margin-top:70px;font-weight:bold;text-decoration:underline;">BERNARD FEOH, S.Pd.SD</div>
       <div>NIP. 197903112014061004</div>
     </div>
     </div>
@@ -505,9 +512,11 @@ tbody tr:last-child { border-bottom:none; }
       </button>
     </div>
     <div class="filter-row">
-      <input type="date" id="adminFilterTgl">
+      <input type="date" id="adminFilterTglDari" placeholder="Dari tanggal">
+      <span style="align-self:center;color:#90A4AE;">s/d</span>
+      <input type="date" id="adminFilterTglSampai" placeholder="Sampai tanggal">
       <select id="adminFilterGuru"><option value="">Semua Guru</option></select>
-      <button onclick="syncSemuaLaluTampil()" class="btn-add" style="border-radius:10px;">🔍 Cari</button>
+      <button onclick="syncSemuaLaluTampil()" class="btn-add" style="border-radius:10px;">🔍 Cari & Sync</button>
       <button onclick="clearAllAbsen()" style="padding:10px 16px;border-radius:10px;background:#FFEBEE;color:var(--red);border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:0.85rem;margin-left:auto;">🗑️ Hapus Semua</button>
     </div>
     <div class="table-wrap">
@@ -849,7 +858,8 @@ setInterval(updateClock,1000); updateClock();
 function initPage(){
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('inputTanggal').value=today;
-  document.getElementById('adminFilterTgl').value=today;
+  if(document.getElementById('adminFilterTglDari')) document.getElementById('adminFilterTglDari').value=today;
+  if(document.getElementById('adminFilterTglSampai')) document.getElementById('adminFilterTglSampai').value=today;
   const m=new Date().getMonth();
   document.getElementById('filterBulan').value=m;
   populateGuruSelects();
@@ -1007,14 +1017,17 @@ function renderRekapTable(){
   const namaBulan=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   document.getElementById('labelBulanRekap').textContent = namaBulan[bulan] + ' ' + tahun;
   
-  // Hitung hari kerja bulan ini (Senin-Jumat)
-  let hariKerja = 0;
-  const tgl = new Date(tahun, bulan, 1);
-  while(tgl.getMonth() === bulan){
-    const h = tgl.getDay();
-    if(h !== 0 && h !== 6) hariKerja++;
-    tgl.setDate(tgl.getDate()+1);
+  // Hitung hari kerja otomatis, tapi bisa di-override lewat input
+  let hariKerjaAuto = 0;
+  const tglHK = new Date(tahun, bulan, 1);
+  while(tglHK.getMonth() === bulan){
+    const h = tglHK.getDay();
+    if(h !== 0 && h !== 6) hariKerjaAuto++;
+    tglHK.setDate(tglHK.getDate()+1);
   }
+  const inputHK = document.getElementById('inputHariKerja');
+  if(inputHK && !inputHK.value) inputHK.value = hariKerjaAuto;
+  const hariKerja = inputHK && inputHK.value ? parseInt(inputHK.value) : hariKerjaAuto;
   
   // Tanggal TTD (hari terakhir bulan)
   const lastDay = new Date(tahun, bulan+1, 0);
@@ -1076,10 +1089,12 @@ function renderDetailTable(){
 
 // ── ADMIN ──
 function renderAdminTable(){
-  const tgl=document.getElementById('adminFilterTgl').value;
+  const dari=document.getElementById('adminFilterTglDari') ? document.getElementById('adminFilterTglDari').value : '';
+  const sampai=document.getElementById('adminFilterTglSampai') ? document.getElementById('adminFilterTglSampai').value : '';
   const guruFilter=document.getElementById('adminFilterGuru').value;
   let data=DB.absen;
-  if(tgl) data=data.filter(a=>a.tanggal===tgl);
+  if(dari) data=data.filter(a=>a.tanggal>=dari);
+  if(sampai) data=data.filter(a=>a.tanggal<=sampai);
   if(guruFilter) data=data.filter(a=>a.guruId==guruFilter);
   data=data.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal));
   const tb=document.getElementById('adminTable');
