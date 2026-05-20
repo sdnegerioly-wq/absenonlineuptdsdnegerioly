@@ -466,10 +466,15 @@ tbody tr:last-child { border-bottom:none; }
 <div class="tab-panel" id="tab-admin">
   <div class="absen-card">
     <h2>⚙️ Kelola & Edit Absensi</h2>
+    <div style="margin-bottom:12px;">
+      <button onclick="syncSemuaLaluTampil()" style="padding:10px 20px;border-radius:50px;background:linear-gradient(135deg,#1565C0,#42A5F5);color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:0.88rem;">
+        🔄 Sync & Tampilkan dari Google Sheets
+      </button>
+    </div>
     <div class="filter-row">
       <input type="date" id="adminFilterTgl">
       <select id="adminFilterGuru"><option value="">Semua Guru</option></select>
-      <button onclick="renderAdminTable()" class="btn-add" style="border-radius:10px;">🔍 Cari</button>
+      <button onclick="syncSemuaLaluTampil()" class="btn-add" style="border-radius:10px;">🔍 Cari</button>
       <button onclick="clearAllAbsen()" style="padding:10px 16px;border-radius:10px;background:#FFEBEE;color:var(--red);border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:0.85rem;margin-left:auto;">🗑️ Hapus Semua</button>
     </div>
     <div class="table-wrap">
@@ -1456,6 +1461,44 @@ function syncHarian(callback){
   script.id = 'sheetsHarianScript';
   script.src = SHEETS_URL + '?action=getAbsen&callback=sheetsHarianCallback';
   script.onerror = ()=>{ if(callback) callback(); };
+  document.head.appendChild(script);
+}
+
+
+// ── SYNC SEMUA DATA LALU TAMPILKAN ──
+function syncSemuaLaluTampil(){
+  showAlert('Mengambil semua data dari Google Sheets...','success');
+  const oldScript = document.getElementById('sheetsSyncAll');
+  if(oldScript) oldScript.remove();
+  
+  window.sheetsSyncAllCallback = function(res){
+    if(res.success && res.data && res.data.length > 1){
+      const rows = res.data.slice(1);
+      DB.absen = rows.map((row, i) => ({
+        id: i + 1,
+        tanggal: row[0] || '',
+        namaGuru: row[1] || '',
+        nip: row[2] || '-',
+        jamMasuk: row[3] || '-',
+        jamPulang: row[4] || '-',
+        status: row[5] || 'hadir',
+        keterangan: row[6] || '',
+        guruId: (DB.guru.find(g=>g.nama===row[1])||{id:0}).id
+      })).filter(a=>a.tanggal && a.namaGuru);
+      saveDB();
+      renderStats();
+      renderAdminTable();
+      renderAbsenTable();
+      showAlert('✅ Berhasil sync ' + DB.absen.length + ' data dari Google Sheets!','success');
+    } else {
+      showAlert('Tidak ada data di Google Sheets!','error');
+    }
+  };
+  
+  const script = document.createElement('script');
+  script.id = 'sheetsSyncAll';
+  script.src = SHEETS_URL + '?action=getAbsen&callback=sheetsSyncAllCallback';
+  script.onerror = ()=>{ showAlert('Gagal koneksi ke Google Sheets!','error'); };
   document.head.appendChild(script);
 }
 
