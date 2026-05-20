@@ -469,7 +469,7 @@ tbody tr:last-child { border-bottom:none; }
   </div>
 
   <div class="absen-card" style="margin-top:0;">
-    <h2>📅 Detail Absensi Harian</h2>
+    <h2>📅 Detail Absensi Hari Ini</h2>
     <div class="table-wrap">
       <table>
         <thead>
@@ -1066,15 +1066,11 @@ function renderRekapTable(){
 }
 
 function renderDetailTable(){
-  const bulan=parseInt(document.getElementById('filterBulan').value);
-  const tahun=parseInt(document.getElementById('filterTahun').value);
-  const guruFilter=document.getElementById('filterGuruRekap').value;
-  const data=DB.absen.filter(a=>{
-    const d=new Date(a.tanggal);
-    return d.getMonth()===bulan && d.getFullYear()===tahun && (guruFilter===''||a.guruId==guruFilter);
-  }).sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal));
+  const today=new Date().toISOString().split('T')[0];
+  const data=DB.absen.filter(a=>a.tanggal===today)
+    .sort((a,b)=>a.namaGuru.localeCompare(b.namaGuru));
   const tb=document.getElementById('detailTable');
-  if(!data.length){ tb.innerHTML=`<tr><td colspan="7" class="no-data"><div class="icon">📅</div><p>Tidak ada data absensi</p></td></tr>`; return; }
+  if(!data.length){ tb.innerHTML=`<tr><td colspan="7" class="no-data"><div class="icon">📅</div><p>Belum ada absensi hari ini</p></td></tr>`; return; }
   tb.innerHTML=data.map((a,i)=>`
     <tr>
       <td>${i+1}</td>
@@ -1207,16 +1203,178 @@ function cetakRekap(){
   const printContent = document.getElementById('rekapPrintArea').innerHTML;
   const win = window.open('','_blank');
   if(!win){ showAlert('Izinkan popup untuk mencetak!','error'); return; }
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap Absensi SDN Oly</title>
+  
+  // Ambil logo jika ada
+  const logoEl = document.getElementById('logoSekolahImg');
+  const logoSrc = logoEl ? logoEl.src : '';
+  
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Rekap Absensi SDN Oly</title>
   <style>
-    body{font-family:Arial,sans-serif;font-size:11px;margin:20px;}
-    table{border-collapse:collapse;width:100%;}
-    th,td{border:1px solid #000;padding:4px 6px;font-size:10px;}
-    th{background:#f0f0f0;text-align:center;}
-    @media print{body{margin:10px;}}
-  </style></head><body>${printContent}</body></html>`);
+    /* Ukuran kertas F4 (215.9mm x 330.2mm) */
+    @page {
+      size: 215.9mm 330.2mm;
+      margin: 15mm 15mm 15mm 20mm;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      color: #000;
+    }
+    /* KOP SURAT */
+    .kop {
+      display: flex;
+      align-items: center;
+      border-bottom: 3px solid #000;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+    .kop img {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+    }
+    .kop-logo-placeholder {
+      width: 70px;
+      height: 70px;
+      border: 2px solid #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .kop-text {
+      text-align: center;
+      flex: 1;
+    }
+    .kop-text .instansi {
+      font-size: 11px;
+      font-weight: normal;
+    }
+    .kop-text .nama-sekolah {
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .kop-text .alamat {
+      font-size: 9px;
+    }
+    /* JUDUL */
+    .judul {
+      text-align: center;
+      font-weight: bold;
+      font-size: 12px;
+      margin: 10px 0 2px;
+      text-transform: uppercase;
+      text-decoration: underline;
+    }
+    .subjudul {
+      text-align: center;
+      font-size: 10px;
+      margin-bottom: 8px;
+    }
+    /* TABEL */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      font-size: 9px;
+      text-align: center;
+    }
+    th {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+    td:nth-child(2) { text-align: left; }
+    /* TTD */
+    .ttd {
+      margin-top: 20px;
+      text-align: right;
+      font-size: 10px;
+    }
+    .ttd .nama-ttd {
+      font-weight: bold;
+      text-decoration: underline;
+      margin-top: 60px;
+      display: block;
+    }
+    @media print {
+      body { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- KOP SEKOLAH -->
+  <div class="kop">
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gIoSUNDX1BST0ZJTEUAAQ..." style="display:none">
+    <img src="https://iili.io/BZyU21V.png" alt="Logo" style="width:70px;height:70px;object-fit:contain;">
+    <div class="kop-text">
+      <div class="instansi">PEMERINTAH KABUPATEN ROTE NDAO</div>
+      <div class="instansi">DINAS PENDIDIKAN</div>
+      <div class="nama-sekolah">UPTD SD NEGERI OLY</div>
+      <div class="alamat">Alamat : Oli, Desa Ndao Nuse, Kec. Ndao Nuse, Kab. Rote Ndao</div>
+      <div class="alamat">Kode pos 85983, NSS : 101241607009, NPSN : 50304537</div>
+      <div class="alamat"><b>e-mail</b> : <span style="color:#1565C0;">sdnegerioly@gmail.com</span></div>
+    </div>
+  </div>
+
+  <!-- JUDUL -->
+  <div class="judul">REKAPITULASI DAFTAR HADIR ASN</div>
+  <div class="subjudul">BULAN : ${document.getElementById('labelBulanRekap').textContent}</div>
+
+  <!-- TABEL REKAP -->
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="3" style="width:25px;">NO</th>
+        <th rowspan="3">NAMA/NIP</th>
+        <th rowspan="3" style="width:50px;">GOL/<br>RUANG</th>
+        <th rowspan="3" style="width:45px;">JUMLAH<br>HARI<br>KERJA</th>
+        <th rowspan="3" style="width:45px;">JUMLAH<br>KEHADIRAN</th>
+        <th colspan="4">ABSEN</th>
+        <th rowspan="3" style="width:60px;">AKUMULASI<br>KETERLAMBATAN<br>MASUK KERJA<br>DAN PULANG<br>MENDAHULUI</th>
+        <th rowspan="3" style="width:35px;">KET.</th>
+      </tr>
+      <tr>
+        <th style="width:30px;">SAKIT</th>
+        <th style="width:30px;">IZIN</th>
+        <th style="width:30px;">CUTI</th>
+        <th style="width:45px;">TANPA<br>BERITA</th>
+      </tr>
+      <tr>
+        <th>6</th><th>7</th><th>8</th><th>9</th>
+      </tr>
+      <tr style="background:#e0e0e0;font-style:italic;">
+        <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+        <td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td>
+      </tr>
+    </thead>
+    <tbody>${document.getElementById('rekapTable').innerHTML}</tbody>
+  </table>
+
+  <!-- TTD -->
+  <div class="ttd">
+    <div>Oly, ${document.getElementById('labelTglTTD').textContent}</div>
+    <div style="margin-top:4px;">Kepala Sekolah,</div>
+    <span class="nama-ttd">BERNARD FEOH, S.Pd.SD</span>
+    <div>NIP. 197903112014061004</div>
+  </div>
+</body>
+</html>`);
   win.document.close();
-  win.print();
+  setTimeout(()=>win.print(), 500);
 }
 // ── GANTI PASSWORD ──
 function gantiPassword(role){
